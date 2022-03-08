@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::net::{SocketAddr};
 use std::time::Duration;
 
 use anyhow::anyhow;
@@ -26,6 +27,7 @@ pub struct Rule {
 
 #[derive(Debug, Clone)]
 pub struct Selector {
+    pub addrs: Vec<String>,
     pub port: Option<u16>,
     pub path: Option<WildMatch>,
     pub method: Option<Method>,
@@ -64,46 +66,49 @@ pub enum PatchBodyAction {
     JSON(Value),
 }
 
-pub fn select_request(port: u16, request: &Request<Body>, selector: &Selector) -> bool {
-    selector.port.iter().all(|p| port == *p)
-        && selector
-            .path
-            .iter()
-            .all(|p| p.matches(request.uri().path()))
+pub fn select_request(target: SocketAddr, request: &Request<Body>, selector: &Selector) -> bool {
+    let port = target.port();
+    let addr = target.ip().to_string();
+    selector.addrs.iter().any(|ip| *ip == addr)
+        && selector.port.iter().all(|p| port == *p)
+        && selector.path.iter().all(|p| p.matches(request.uri().path()))
         && selector.method.iter().all(|m| request.method() == m)
         && selector.request_headers.iter().all(|fields| {
-            fields
-                .iter()
-                .all(|(header, value)| request.headers().get_all(header).iter().any(|f| f == value))
-        })
+        fields
+            .iter()
+            .all(|(header, value)| request.headers().get_all(header).iter().any(|f| f == value))
+    })
 }
 
 pub fn select_response(
-    port: u16,
+    target: SocketAddr,
     uri: &Uri,
     method: &Method,
     request_headers: &HeaderMap,
     response: &Response<Body>,
     selector: &Selector,
 ) -> bool {
-    selector.port.iter().all(|p| port == *p)
+    let port = target.port();
+    let addr = target.ip().to_string();
+    selector.addrs.iter().any(|ip| *ip == addr)
+        && selector.port.iter().all(|p| port == *p)
         && selector.path.iter().all(|p| p.matches(uri.path()))
         && selector.method.iter().all(|m| method == m)
         && selector.code.iter().all(|code| response.status() == *code)
         && selector.request_headers.iter().all(|fields| {
-            fields
-                .iter()
-                .all(|(header, value)| request_headers.get_all(header).iter().any(|f| f == value))
-        })
+        fields
+            .iter()
+            .all(|(header, value)| request_headers.get_all(header).iter().any(|f| f == value))
+    })
         && selector.response_headers.iter().all(|fields| {
-            fields.iter().all(|(header, value)| {
-                response
-                    .headers()
-                    .get_all(header)
-                    .iter()
-                    .any(|f| f == value)
-            })
+        fields.iter().all(|(header, value)| {
+            response
+                .headers()
+                .get_all(header)
+                .iter()
+                .any(|f| f == value)
         })
+    })
 }
 
 async fn read_value(body: &mut Body) -> anyhow::Result<Value> {

@@ -8,4 +8,6 @@ pub struct Config {
     pub ignore_mark: i32,
     pub route_table: u8,
     pub rules: Vec<Rule>,
+    pub proxy_addrs: Option<String>,
+    pub as_client: bool,
 }

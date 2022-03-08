@@ -21,6 +21,8 @@ pub struct RawConfig {
     pub ignore_mark: Option<i32>,
     pub route_table: Option<u8>,
     pub rules: Option<Vec<RawRule>>,
+    pub proxy_addrs: Vec<String>,
+    pub as_client: bool,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
@@ -46,6 +48,7 @@ pub struct RawSelector {
     pub code: Option<u16>,
     pub request_headers: Option<HashMap<String, String>>,
     pub response_headers: Option<HashMap<String, String>>,
+    pub addrs: Vec<String>,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
@@ -131,6 +134,18 @@ impl TryFrom<RawConfig> for Config {
                 .into_iter()
                 .map(TryInto::try_into)
                 .collect::<Result<Vec<_>, Self::Error>>()?,
+            proxy_addrs: if raw.proxy_addrs.is_empty() {
+                None
+            } else {
+                Some(
+                    raw.proxy_addrs
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                        .join(","),
+                )
+            },
+            as_client: raw.as_client,
         })
     }
 }
@@ -160,6 +175,10 @@ impl TryFrom<RawSelector> for Selector {
     type Error = Error;
 
     fn try_from(raw: RawSelector) -> Result<Self, Self::Error> {
+        let mut raw_addrs = Vec::new();
+        if !raw.addrs.is_empty() {
+            raw_addrs = raw.addrs
+        }
         Ok(Self {
             port: raw.port,
             path: raw.path.as_ref().map(|p| WildMatch::new(p)),
@@ -191,6 +210,7 @@ impl TryFrom<RawSelector> for Selector {
                     Ok(map)
                 })
                 .transpose()?,
+            addrs:raw_addrs,
         })
     }
 }

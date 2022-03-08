@@ -116,7 +116,7 @@ impl HttpService {
             .iter()
             .filter(|rule| {
                 matches!(rule.target, Target::Request)
-                    && select_request(self.target.port(), &request, &rule.selector)
+                    && select_request(self.target, &request, &rule.selector)
             })
             .collect();
 
@@ -153,7 +153,7 @@ impl HttpService {
             .filter(|rule| {
                 matches!(rule.target, Target::Response)
                     && select_response(
-                        self.target.port(),
+                        self.target,
                         &uri,
                         &method,
                         &headers,

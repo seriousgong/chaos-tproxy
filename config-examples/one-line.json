@@ -1,1 +1,2 @@
-{"proxy_ports": [80, 8080, 30086], "rules": [{"target": "Request", "selector": {"path": "/src", "method": "GET"},"actions": {"abort": true}}]}
+{ "as_client":true,"proxy_addrs":["10.100.246.73","10.204.131.92"],"proxy_ports": [8080], "rules": [{"target": "Request", "selector": {"path": "/chaosarranges", "method": "GET", "addrs": ["10.100.246.73"], "port": 80},"actions": {"abort": false,"delay":"2s"}},{"target": "Request", "selector": {"path": "/chaosarrange/1", "method": "GET", "addrs": ["10.204.131.92"], "port": 80},"actions": {"abort": false,"delay":"2s"}}]}
+

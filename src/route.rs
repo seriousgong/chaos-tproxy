@@ -16,11 +16,15 @@ const MANGLE: &str = "mangle";
 // do nothing if config.proxy_ports is None
 pub fn set_all_routes(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
     let iptables = new(false)?;
-    let proxy_ports = match config.proxy_ports.as_ref() {
+    let proxy_ports  = match config.proxy_ports.as_ref() {
         Some(ports) => ports,
         None => return Ok(()),
     };
+    let mut proxy_addrs = "".to_string();
 
+    if config.proxy_addrs.is_some(){
+        proxy_addrs="-d ".to_string() + &config.proxy_addrs.as_ref().unwrap().to_string()
+    }
     iptables.new_chain(MANGLE, DIVERT)?;
     iptables.append(
         MANGLE,
@@ -48,14 +52,16 @@ pub fn set_all_routes(config: &Config) -> Result<(), Box<dyn std::error::Error>>
             config.listen_port, config.proxy_mark
         ),
     )?;
+
     iptables.append(
         MANGLE,
         PREROUTING,
         &format!(
-            "-p tcp --match multiport --dport {} -j {}",
-            proxy_ports, CHAOS_PROXY_PREROUTING
+            "-p tcp --match multiport {} --dport {} -j {}",
+            proxy_addrs, proxy_ports, CHAOS_PROXY_PREROUTING
         ),
     )?;
+
 
     iptables.new_chain(MANGLE, CHAOS_PROXY_OUTPUT)?;
     iptables.append(
@@ -68,14 +74,56 @@ pub fn set_all_routes(config: &Config) -> Result<(), Box<dyn std::error::Error>>
         CHAOS_PROXY_OUTPUT,
         &format!("-p tcp -j MARK --set-mark {}", config.proxy_mark),
     )?;
-    iptables.append(
-        MANGLE,
-        OUTPUT,
-        &format!(
-            "-p tcp --match multiport --sport {} -j {}",
-            proxy_ports, CHAOS_PROXY_OUTPUT
-        ),
-    )?;
+
+    // for ip in &config.ip_limits {
+    //     // 请求流量匹配
+    //     iptables.append(
+    //         MANGLE,
+    //         PREROUTING,
+    //         &format!(
+    //             "-p tcp --match multiport -d {} --dport {} -j {}",
+    //             ip, proxy_ports, CHAOS_PROXY_PREROUTING
+    //         ),
+    //     )?;
+    //     // 响应流量匹配
+    //     iptables.append(
+    //         MANGLE,
+    //         PREROUTING,
+    //         &format!(
+    //             "-p tcp --match multiport -s {} --sport {} -j {}",
+    //             ip, proxy_ports, CHAOS_PROXY_PREROUTING
+    //         ),
+    //     )?;
+    //     // 请求流量重走iptables
+    //     iptables.append(
+    //         MANGLE,
+    //         OUTPUT,
+    //         &format!(
+    //             "-p tcp --match multiport -s {} --dport {} -j {}",
+    //             ip, proxy_ports, CHAOS_PROXY_OUTPUT
+    //         ),
+    //     )?;
+    // }
+
+    if config.as_client {
+        iptables.append(
+            MANGLE,
+            OUTPUT,
+            &format!(
+                "-p tcp --match multiport {} --dport {} -j {}",
+                proxy_addrs, proxy_ports, CHAOS_PROXY_OUTPUT
+            ),
+        )?;
+    } else {
+        iptables.append(
+            MANGLE,
+            OUTPUT,
+            &format!(
+                "-p tcp --match multiport {} --sport {} -j {}",
+                proxy_addrs, proxy_ports, CHAOS_PROXY_OUTPUT
+            ),
+        )?;
+    }
 
     let err = set_ip_rule(config.route_table, config.proxy_mark)?;
     if !err.is_empty() {

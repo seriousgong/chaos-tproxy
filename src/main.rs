@@ -26,6 +26,8 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|err| anyhow!("{}", err))?;
 
     let cfg = get_config_from_opt(&opt).await?;
+    // 防止进程非graceful shut down 导致的 iptables 和 route tables 规则遗留
+    // clear_routes(&cfg)?;
     let tproxy_server = HttpServer::new(cfg);
 
     let mut server: Box<dyn SuperServer> = if opt.interactive {

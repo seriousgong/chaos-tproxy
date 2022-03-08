@@ -1,1 +1,9 @@
 /target
+/.idea/chaos-tproxy-v0.2.4.iml
+/.idea/deployment.xml
+/.idea/modules.xml
+/.idea/sshConfigs.xml
+/.idea/vcs.xml
+/.idea/webServers.xml
+/.idea/.gitignore
+/.idea/misc.xml
