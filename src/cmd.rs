@@ -62,7 +62,7 @@ pub async fn get_config_from_opt(opt: &Opt) -> Result<Config> {
             }
         }
     }
-    .try_into()
+        .try_into()
 }
 
 #[cfg(test)]
@@ -72,11 +72,14 @@ mod test {
     use anyhow::Result;
 
     use super::config::{RawActions, RawConfig, RawRule, RawSelector, RawTarget};
+
     #[test]
     fn test_serde_util() -> Result<()> {
         let conf = RawConfig {
+            as_client: true,
             listen_port: Some(58080),
             proxy_ports: vec![80],
+            proxy_addrs: vec![""],
             proxy_mark: Some(255),
             ignore_mark: Some(255),
             route_table: Some(100),
@@ -95,6 +98,7 @@ mod test {
                         ),
                         code: None,
                         response_headers: None,
+                        addrs: None,
                     },
                     actions: RawActions {
                         abort: None,
@@ -122,6 +126,7 @@ mod test {
                                 .map(|(k, v)| (k.to_string(), v.to_string()))
                                 .collect(),
                         ),
+                        addrs: None,
                     },
                     actions: RawActions {
                         abort: Some(true),

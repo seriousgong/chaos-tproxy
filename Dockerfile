@@ -1,7 +1,6 @@
-
 # syntax=docker/dockerfile:experimental
 
-FROM debian:buster-slim
+FROM hub.hexin.cn:9082/tmp/debian:buster-slim
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -20,11 +19,7 @@ ENV PATH "/root/.cargo/bin:${PATH}"
 
 RUN rustup target add $TARGET
 
-RUN if [ -n "$HTTP_PROXY" ]; then echo "[http]\n\
-proxy = \"${HTTP_PROXY}\"\n\
-"\
->> /root/.cargo/config ; fi
-
+RUN echo "replace-with = 'aliyun'\n [source.aliyun]\n registry = \"https://code.aliyun.com/rustcc/crates.io-index\"" >> /root/.cargo/config
 RUN echo "[target.aarch64-unknown-linux-gnu]\n\
 linker = \"aarch64-linux-gnu-gcc\"\n\
 "\

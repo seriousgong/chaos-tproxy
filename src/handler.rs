@@ -69,7 +69,8 @@ pub enum PatchBodyAction {
 pub fn select_request(target: SocketAddr, request: &Request<Body>, selector: &Selector) -> bool {
     let port = target.port();
     let addr = target.ip().to_string();
-    selector.addrs.iter().any(|ip| *ip == addr)
+    (selector.addrs.len() == 0
+        || selector.addrs.iter().any(|ip| *ip == addr))
         && selector.port.iter().all(|p| port == *p)
         && selector.path.iter().all(|p| p.matches(request.uri().path()))
         && selector.method.iter().all(|m| request.method() == m)
@@ -90,7 +91,8 @@ pub fn select_response(
 ) -> bool {
     let port = target.port();
     let addr = target.ip().to_string();
-    selector.addrs.iter().any(|ip| *ip == addr)
+    (selector.addrs.len() == 0
+        || selector.addrs.iter().any(|ip| *ip == addr))
         && selector.port.iter().all(|p| port == *p)
         && selector.path.iter().all(|p| p.matches(uri.path()))
         && selector.method.iter().all(|m| method == m)

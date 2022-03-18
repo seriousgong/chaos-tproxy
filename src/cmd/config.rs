@@ -48,7 +48,7 @@ pub struct RawSelector {
     pub code: Option<u16>,
     pub request_headers: Option<HashMap<String, String>>,
     pub response_headers: Option<HashMap<String, String>>,
-    pub addrs: Vec<String>,
+    pub addrs: Option<Vec<String>>,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
@@ -175,10 +175,10 @@ impl TryFrom<RawSelector> for Selector {
     type Error = Error;
 
     fn try_from(raw: RawSelector) -> Result<Self, Self::Error> {
-        let mut raw_addrs = Vec::new();
-        if !raw.addrs.is_empty() {
-            raw_addrs = raw.addrs
-        }
+        let  raw_addrs = match raw.addrs {
+            Some(addrs) => addrs,
+            None => Vec::new()
+        };
         Ok(Self {
             port: raw.port,
             path: raw.path.as_ref().map(|p| WildMatch::new(p)),
@@ -210,7 +210,7 @@ impl TryFrom<RawSelector> for Selector {
                     Ok(map)
                 })
                 .transpose()?,
-            addrs:raw_addrs,
+            addrs: raw_addrs,
         })
     }
 }
