@@ -82,7 +82,7 @@ pub fn select_request(target: SocketAddr, request: &Request<Body>, selector: &Se
             .all(|(header, value)| request.headers().get_all(header).iter().any(|f| f == value))
     });
     if selector.query_params.is_some() {
-        let  parts = request.uri().clone().into_parts();
+        let parts = request.uri().clone().into_parts();
         let old_query = parts
             .path_and_query
             .as_ref()
@@ -90,9 +90,13 @@ pub fn select_request(target: SocketAddr, request: &Request<Body>, selector: &Se
             .unwrap_or("");
 
         let result = serde_urlencoded::from_str(old_query);
-        if let  Ok(v) = result {
+        if let Ok(v) = result {
             let query_map: HashMap<String, String> = v;
-            is_selected = is_selected && query_map.eq(&selector.query_params.as_ref().unwrap().clone())
+            if !query_map.is_empty() {
+                is_selected = is_selected && query_map.iter().all(|(param, value)| selector.query_params.iter().any(|field| field.contains_key(param) && field.get(param).unwrap_or(&String::new()).eq(value)))
+            }else {
+                return false
+            }
         }
     }
     return is_selected;
