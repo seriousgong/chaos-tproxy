@@ -34,6 +34,8 @@ pub struct Selector {
     pub code: Option<StatusCode>,
     pub request_headers: Option<HeaderMap>,
     pub response_headers: Option<HeaderMap>,
+    pub query_params: Option<HashMap<String, String>>,
+
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -69,7 +71,7 @@ pub enum PatchBodyAction {
 pub fn select_request(target: SocketAddr, request: &Request<Body>, selector: &Selector) -> bool {
     let port = target.port();
     let addr = target.ip().to_string();
-    (selector.addrs.len() == 0
+    let mut is_selected = (selector.addrs.len() == 0
         || selector.addrs.iter().any(|ip| *ip == addr))
         && selector.port.iter().all(|p| port == *p)
         && selector.path.iter().all(|p| p.matches(request.uri().path()))
@@ -78,7 +80,22 @@ pub fn select_request(target: SocketAddr, request: &Request<Body>, selector: &Se
         fields
             .iter()
             .all(|(header, value)| request.headers().get_all(header).iter().any(|f| f == value))
-    })
+    });
+    if selector.query_params.is_some() {
+        let  parts = request.uri().clone().into_parts();
+        let old_query = parts
+            .path_and_query
+            .as_ref()
+            .and_then(|paq| paq.query())
+            .unwrap_or("");
+
+        let result = serde_urlencoded::from_str(old_query);
+        if let  Ok(v) = result {
+            let query_map: HashMap<String, String> = v;
+            is_selected = is_selected && query_map.eq(&selector.query_params.as_ref().unwrap().clone())
+        }
+    }
+    return is_selected;
 }
 
 pub fn select_response(

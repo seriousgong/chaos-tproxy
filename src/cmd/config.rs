@@ -49,6 +49,7 @@ pub struct RawSelector {
     pub request_headers: Option<HashMap<String, String>>,
     pub response_headers: Option<HashMap<String, String>>,
     pub addrs: Option<Vec<String>>,
+    pub query_params: Option<HashMap<String, String>>,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
@@ -211,6 +212,7 @@ impl TryFrom<RawSelector> for Selector {
                 })
                 .transpose()?,
             addrs: raw_addrs,
+            query_params: raw.query_params,
         })
     }
 }

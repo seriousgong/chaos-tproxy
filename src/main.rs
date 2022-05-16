@@ -41,5 +41,5 @@ async fn main() -> anyhow::Result<()> {
         SignalHandler::from_kinds(&[SignalKind::interrupt(), SignalKind::terminate()])?;
     signal_handler.wait().await?;
     server.stop().await?;
-    Ok(())
+    return Ok(())
 }
