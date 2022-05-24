@@ -94,7 +94,7 @@ pub fn select_request(target: SocketAddr, request: &Request<Body>, selector: &Se
         if let Ok(v) = result {
             let query_map: HashMap<String, String> = v;
             if !query_map.is_empty() {
-                is_selected = is_selected && query_map.iter().all(|(param, value)| query_rules.contains_key(param) && query_rules.get(param).unwrap_or(&String::new()).eq(value))
+                is_selected = is_selected && query_rules.iter().all(|(param, value)| query_map.contains_key(param) && query_map.get(param).unwrap_or(&String::new()).eq(value))
             } else {
                 return false;
             }

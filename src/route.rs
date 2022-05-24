@@ -25,18 +25,18 @@ pub fn set_all_routes(config: &Config) -> Result<(), Box<dyn std::error::Error>>
     if config.proxy_addrs.is_some(){
         proxy_addrs="-d ".to_string() + &config.proxy_addrs.as_ref().unwrap().to_string()
     }
-    iptables.new_chain(MANGLE, DIVERT)?;
-    iptables.append(
-        MANGLE,
-        PREROUTING,
-        &format!("-p tcp -m socket -j {}", DIVERT),
-    )?;
-    iptables.append(
-        MANGLE,
-        DIVERT,
-        &format!("-j MARK --set-mark {}", config.proxy_mark),
-    )?;
-    iptables.append(MANGLE, DIVERT, "-j ACCEPT")?;
+    // iptables.new_chain(MANGLE, DIVERT)?;
+    // iptables.append(
+    //     MANGLE,
+    //     PREROUTING,
+    //     &format!("-p tcp -m socket -j {}", DIVERT),
+    // )?;
+    // iptables.append(
+    //     MANGLE,
+    //     DIVERT,
+    //     &format!("-j MARK --set-mark {}", config.proxy_mark),
+    // )?;
+    // iptables.append(MANGLE, DIVERT, "-j ACCEPT")?;
 
     iptables.new_chain(MANGLE, CHAOS_PROXY_PREROUTING)?;
     iptables.append(
