@@ -6,7 +6,7 @@ use tracing::debug;
 
 use crate::tproxy::config::Config;
 
-const DIVERT: &str = "DIVERT";
+// const DIVERT: &str = "DIVERT";
 const PREROUTING: &str = "PREROUTING";
 const CHAOS_PROXY_PREROUTING: &str = "CHAOS_PROXY_PREROUTING";
 const OUTPUT: &str = "OUTPUT";
@@ -156,7 +156,7 @@ pub fn clear_routes(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
 
     let iptables = new(false).expect("fail to init iptables");
     iptables.flush_table(MANGLE)?;
-    iptables.delete_chain(MANGLE, DIVERT)?;
+    // iptables.delete_chain(MANGLE, DIVERT)?;
     iptables.delete_chain(MANGLE, CHAOS_PROXY_PREROUTING)?;
     iptables.delete_chain(MANGLE, CHAOS_PROXY_OUTPUT)?;
 
