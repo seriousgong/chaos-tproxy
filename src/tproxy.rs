@@ -73,7 +73,7 @@ impl SuperServer for HttpServer {
         spawn_blocking(move || {
             set_all_routes(&cfg).map_err(|err| anyhow!("fail to set routes: {}", err.to_string()))
         })
-        .await??;
+            .await??;
 
         let server = Server::builder(incoming).serve(ServerImpl(Arc::new(self.config.clone())));
         self.handler = Some(ServeHandler::serve(move |rx| {
@@ -93,7 +93,7 @@ impl SuperServer for HttpServer {
         spawn_blocking(move || {
             clear_routes(&cfg).map_err(|err| anyhow!("fail to clear routes: {}", err.to_string()))
         })
-        .await?
+            .await?
     }
 }
 
@@ -153,13 +153,13 @@ impl HttpService {
             .filter(|rule| {
                 matches!(rule.target, Target::Response)
                     && select_response(
-                        self.target,
-                        &uri,
-                        &method,
-                        &headers,
-                        &response,
-                        &rule.selector,
-                    )
+                    self.target,
+                    &uri,
+                    &method,
+                    &headers,
+                    &response,
+                    &rule.selector,
+                )
             })
             .collect();
 

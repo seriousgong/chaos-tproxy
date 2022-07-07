@@ -109,7 +109,6 @@ pub fn select_response(
     method: &Method,
     request_headers: &HeaderMap,
     response: &Response<Body>,
-    request: &Request<Body>,
     selector: &Selector,
 ) -> bool {
     let port = target.port();
@@ -135,7 +134,7 @@ pub fn select_response(
         })
     });
     if selector.query_params.is_some() {
-        let parts = request.uri().clone().into_parts();
+        let parts = uri.clone().into_parts();
         let query_rules = selector.query_params.as_ref().unwrap();
         let old_query = parts
             .path_and_query
