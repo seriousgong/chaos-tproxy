@@ -109,11 +109,12 @@ pub fn select_response(
     method: &Method,
     request_headers: &HeaderMap,
     response: &Response<Body>,
+    request: &Request<Body>,
     selector: &Selector,
 ) -> bool {
     let port = target.port();
     let addr = target.ip().to_string();
-    (selector.addrs.len() == 0
+   let mut  is_selected =(selector.addrs.len() == 0
         || selector.addrs.iter().any(|ip| *ip == addr))
         && selector.port.iter().all(|p| port == *p)
         && selector.path.iter().all(|p| p.matches(uri.path()))
@@ -132,8 +133,29 @@ pub fn select_response(
                 .iter()
                 .any(|f| f == value)
         })
-    })
+    });
+    if selector.query_params.is_some() {
+        let parts = request.uri().clone().into_parts();
+        let query_rules = selector.query_params.as_ref().unwrap();
+        let old_query = parts
+            .path_and_query
+            .as_ref()
+            .and_then(|paq| paq.query())
+            .unwrap_or("");
+
+        let result = serde_urlencoded::from_str(old_query);
+        if let Ok(v) = result {
+            let query_map: HashMap<String, String> = v;
+            if !query_map.is_empty() {
+                is_selected = is_selected && query_rules.iter().all(|(param, value)| query_map.contains_key(param) && query_map.get(param).unwrap_or(&String::new()).eq(value))
+            } else {
+                return false;
+            }
+        }
+    }
+    return is_selected
 }
+
 
 async fn read_value(body: &mut Body) -> anyhow::Result<Value> {
     let tmp = std::mem::take(body);
